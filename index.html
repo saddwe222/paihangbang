@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工积分统计系统 | BWM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #2c3e50;
+            --primary-light: #4a6fa5;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --border-radius: 10px;
+            --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e1eeff 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+            animation: headerAnimation 10s infinite alternate;
+        }
+        
+        @keyframes headerAnimation {
+            0% { background: linear-gradient(135deg, #2c3e50, #4a6fa5); }
+            50% { background: linear-gradient(135deg, #4a6fa5, #3498db); }
+            100% { background: linear-gradient(135deg, #3498db, #2c3e50); }
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            font-weight: 300;
+        }
+        
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .user-area {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 3;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 30px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .user-info i {
+            font-size: 1.2rem;
+        }
+        
+        .auth-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .auth-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dashboard {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-panel {
+            flex: 1;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--light-gray);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .leaderboard-panel {
+            width: 350px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            transition: var(--transition);
+            position: sticky;
+            top: 20px;
+            overflow: hidden;
+            border: 1px solid var(--light-gray);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .panel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-light), var(--secondary));
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-gray);
+            position: relative;
+        }
+        
+        .panel-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .panel-title i {
+            color: var(--primary-light);
+            background: rgba(74, 111, 165, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+        
+        button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(30deg);
+            transition: var(--transition);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        button:hover::after {
+            transform: rotate(30deg) translate(10px, 10px);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button.delete-btn {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        button.save-btn {
+            background: linear-gradient(135deg, var(--success), #219653);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        button.leaderboard-copy {
+            background: linear-gradient(135deg, var(--secondary), #2980b9);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .table-container {
+            flex: 1;
+            overflow: visible;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 0.9rem;
+            table-layout: auto;
+        }
+        
+        th, td {
+            border: 1px solid var(--light-gray);
+            padding: 12px 8px;
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        th {
+            background: linear-gradient(to bottom, var(--primary-light), var(--primary));
+            color: white;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            height: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        tr:hover {
+            background-color: #edf5ff;
+        }
+        
+        input {
+            width: 60px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            font-weight: 600;
+            color: var(--primary);
+            background: #f8fafc;
+        }
+        
+        input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+            outline: none;
+            background: white;
+        }
+        
+        .name-input {
+            width: 120px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .leaderboard-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+        }
+        
+        .leaderboard {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .leaderboard ol {
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        .leaderboard li {
+            margin-bottom: 12px;
+            padding: 15px 18px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            border-left: 4px solid var(--primary-light);
+            position: relative;
+        }
+        
+        .leaderboard li::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(74, 111, 165, 0.05), transparent);
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 0;
+        }
+        
+        .leaderboard li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .leaderboard li:hover::before {
+            opacity: 1;
+        }
+        
+        .leaderboard li div:first-child {
+            font-weight: 600;
+            color: var(--primary);
+            position: relative;
+            z-index: 1;
+            font-size: 0.95rem;
+        }
+        
+        .leaderboard li div:last-child {
+            background: var(--primary-light);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 3px 8px rgba(74, 111, 165, 0.3);
+            font-size: 0.9rem;
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, var(--success), #219653);
+            color: white;
+            padding: 18px 28px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: fadeInOut 3s ease-in-out;
+            opacity: 0;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(-20px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .number-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .number-controls button {
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            border-radius: 8px;
+        }
+        
+        .auto-save-notice {
+            text-align: center;
+            color: var(--success);
+            font-size: 0.95rem;
+            margin: 15px 0 25px;
+            padding: 12px;
+            background: rgba(39, 174, 96, 0.1);
+            border-radius: 12px;
+            font-weight: 500;
+            border: 1px dashed var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .member-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+        }
+        
+        .member-name {
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+        
+        .member-points {
+            font-size: 0.85rem;
+            color: var(--success);
+            font-weight: 700;
+            background: rgba(39, 174, 96, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        
+        .ranking-rule {
+            background: #fffaf0;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--dark);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .ranking-rule i {
+            font-size: 22px;
+            color: var(--warning);
+            flex-shrink: 0;
+        }
+        
+        .add-member-btn {
+            padding: 9px 18px;
+            font-size: 0.95rem;
+            background: linear-gradient(135deg, var(--secondary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            font-weight: 600;
+        }
+        
+        .add-member-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .upgrade-highlight {
+            background: linear-gradient(to bottom, rgba(155, 89, 182, 0.1), rgba(155, 89, 182, 0.05));
+            font-weight: 600;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-top: 30px;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 1400px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .leaderboard-panel {
+                width: 100%;
+                position: static;
+                max-height: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+                padding-right: 70px;
+            }
+            
+            .logo {
+                top: 15px;
+                right: 15px;
+                width: 60px;
+                height: 60px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .control-group {
+                width: 100%;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+                padding: 14px;
+                font-size: 0.95rem;
+            }
+            
+            th, td {
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            
+            input {
+                width: 50px;
+                padding: 6px;
+            }
+            
+            .name-input {
+                width: 100px;
+                font-size: 0.85rem;
+            }
+            
+            .stats-panel, .leaderboard-panel {
+                padding: 20px 15px;
+            }
+            
+            .panel-title {
+                font-size: 1.3rem;
+            }
+            
+            .auto-save-notice {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.9rem;
+            }
+            
+            .panel-title {
+                font-size: 1.2rem;
+            }
+            
+            th, td {
+                padding: 7px 4px;
+                font-size: 0.75rem;
+            }
+            
+            input {
+                width: 45px;
+                font-size: 0.8rem;
+                padding: 5px;
+            }
+            
+            .name-input {
+                width: 90px;
+                font-size: 0.8rem;
+            }
+            
+            .number-controls button {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+                min-width: 28px;
+            }
+            
+            .member-name {
+                font-size: 0.85rem;
+            }
+            
+            .member-points {
+                font-size: 0.8rem;
+            }
+            
+            .add-member-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .controls button {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+            
+            .name-input {
+                width: 80px;
+            }
+            
+            input {
+                width: 40px;
+            }
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: var(--light-gray);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* 登录/注册模态框样式 */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .auth-modal.active {
+            display: flex;
+        }
+        
+        .auth-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            animation: modalAppear 0.4s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            0% { transform: translateY(-30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        .auth-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            padding: 25px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .auth-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .auth-header p {
+            opacity: 0.9;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            background: var(--light-gray);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .auth-tab.active {
+            background: white;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .auth-form {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .form-group input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: var(--transition);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .auth-switch a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            margin-top: 8px;
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+        
+        .auth-footer {
+            padding: 15px;
+            text-align: center;
+            background: var(--light-gray);
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="user-area" id="userArea">
+                <!-- 登录状态显示 -->
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="usernameDisplay">用户名</span>
+                </div>
+                <button class="auth-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> 登录/注册
+                </button>
+                <button class="auth-btn" id="logoutBtn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
+            </div>
+            
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h1>员工积分统计系统</h1>
+            <p class="subtitle">你只管努力，其他交给天意</p>
+        </header>
+        
+        <div class="auto-save-notice">
+            <i class="fas fa-sync-alt"></i>
+            所有操作后数据将自动保存，建议定期手动保存以防数据丢失
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <button class="save-btn" onclick="manualSave()">
+                    <i class="fas fa-save"></i> 手动保存数据
+                </button>
+            </div>
+            <div class="control-group">
+                <button class="leaderboard-copy" onclick="copyLeaderboard()">
+                    <i class="fas fa-trophy"></i> 复制排行榜
+                </button>
+                <button onclick="resetTable()" class="delete-btn">
+                    <i class="fas fa-redo"></i> 重置表格
+                </button>
+            </div>
+        </div>
+        
+        <div class="ranking-rule">
+            <i class="fas fa-lightbulb"></i>
+            <div>
+                <strong>今日激励：</strong>泪水打湿猪脚饭，发誓今年要赚100万！今天你努力了吗？
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="stats-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-table"></i> 积分统计表</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="table">数据表</button>
+                        <button class="tab-btn" data-tab="summary">数据摘要</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="scoreTable">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>成员信息</th>
+                                <th>M1数量</th>
+                                <th>M1积分</th>
+                                <th>M2数量</th>
+                                <th>M2积分</th>
+                                <th>M3数量</th>
+                                <th>M3积分</th>
+                                <th class=>1-2升级</th>
+                                <th class=>1-2积分</th>
+                                <th class=>2-3升级</th>
+                                <th class=>2-3积分</th>
+                                <th>每日奖励</th>
+                                <th>奖励积分</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="rank">1</td>
+                                <td>
+                                    <div class="member-info">
+                                        <div class="member-name"><input type="text" class="name name-input" value="张三丰"></div>
+                                        <div class="member-points">198 Poin</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1" min="0" value="15" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1-points">15</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2" min="0" value="12" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2-points">36</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m3" min="0" value="8" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m3-points">72</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1to2" min="0" value="7" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1to2-points">21</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2to3" min="0" value="9" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2to3-points">54</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="daily" min="0" value="0" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="bonus-points">0</td>
+                                <td><button class="delete-btn" onclick="deleteRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td class="rank">2</td>
+                                <td>
+                                    <div class="member-info">
+                                        <div class="member-name"><input type="text" class="name name-input" value="李四"></div>
+                                        <div class="member-points">156 Poin</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1" min="0" value="18" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1-points">18</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2" min="0" value="10" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2-points">30</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m3" min="0" value="6" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m3-points">54</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1to2" min="0" value="5" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1to2-points">15</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2to3" min="0" value="7" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2to3-points">42</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="daily" min="0" value="1" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="bonus-points">5</td>
+                                <td><button class="delete-btn" onclick="deleteRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td class="rank">3</td>
+                                <td>
+                                    <div class="member-info">
+                                        <div class="member-name"><input type="text" class="name name-input" value="王五"></div>
+                                        <div class="member-points">128 Poin</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1" min="0" value="12" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1-points">12</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2" min="0" value="8" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2-points">24</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m3" min="0" value="5" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m3-points">45</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1to2" min="0" value="4" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1to2-points">12</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2to3" min="0" value="5" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2to3-points">30</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="daily" min="0" value="0" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="bonus-points">0</td>
+                                <td><button class="delete-btn" onclick="deleteRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td class="rank">4</td>
+                                <td>
+                                    <div class="member-info">
+                                        <div class="member-name"><input type="text" class="name name-input" value="赵六"></div>
+                                        <div class="member-points">105 Poin</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1" min="0" value="10" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1-points">10</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2" min="0" value="7" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2-points">21</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m3" min="0" value="4" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m3-points">36</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1to2" min="0" value="3" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1to2-points">9</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2to3" min="0" value="4" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2to3-points">24</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="daily" min="0" value="1" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="bonus-points">5</td>
+                                <td><button class="delete-btn" onclick="deleteRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td class="rank">5</td>
+                                <td>
+                                    <div class="member-info">
+                                        <div class="member-name"><input type="text" class="name name-input" value="钱七"></div>
+                                        <div class="member-points">92 Poin</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1" min="0" value="8" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1-points">8</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2" min="0" value="6" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2-points">18</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m3" min="0" value="4" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m3-points">36</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m1to2" min="0" value="2" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m1to2-points">6</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="m2to3" min="0" value="3" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="m2to3-points">18</td>
+                                <td>
+                                    <div class="number-controls">
+                                        <button onclick="changeNumber(this, -1)">-</button>
+                                        <input type="number" class="daily" min="0" value="0" oninput="calculateRow(this)">
+                                        <button onclick="changeNumber(this, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="bonus-points">0</td>
+                                <td><button class="delete-btn" onclick="deleteRow(this)">删除</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2"><button class="add-member-btn" onclick="addParticipant()"><i class="fas fa-plus"></i> 添加新成员</button></td>
+                                <td id="totalM1">63</td>
+                                <td id="totalM1Points">63</td>
+                                <td id="totalM2">43</td>
+                                <td id="totalM2Points">129</td>
+                                <td id="totalM3">27</td>
+                                <td id="totalM3Points">243</td>
+                                <td id="totalM1to2">21</td>
+                                <td id="totalM1to2Points">63</td>
+                                <td id="totalM2to3">28</td>
+                                <td id="totalM2to3Points">168</td>
+                                <td id="totalDaily">2</td>
+                                <td id="totalBonus">10</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="leaderboard-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-trophy"></i> 实时排行榜</h2>
+                </div>
+                
+                <button class="leaderboard-copy" onclick="copyLeaderboard()">
+                    <i class="fas fa-copy"></i> 复制排行榜
+                </button>
+                
+                <div class="leaderboard-container">
+                    <div class="leaderboard">
+                        <ol>
+                            <li>
+                                <div><strong>1.</strong> 张三丰</div>
+                                <div>198 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>2.</strong> 李四</div>
+                                <div>156 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>3.</strong> 王五</div>
+                                <div>128 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>4.</strong> 赵六</div>
+                                <div>105 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>5.</strong> 钱七</div>
+                                <div>92 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>6.</strong> 孙八</div>
+                                <div>87 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>7.</strong> 周九</div>
+                                <div>76 Poin</div>
+                            </li>
+                            <li>
+                                <div><strong>8.</strong> 吴十</div>
+                                <div>68 Poin</div>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 BWM团队激励计划 | 员工积分统计系统 v2.1</p>
+            <p>数据安全存储 | 实时自动备份 | 公平透明机制</p>
+        </div>
+    </div>
+    
+    <!-- 登录/注册模态框 -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2 id="authTitle">欢迎使用积分统计系统</h2>
+                <p>请登录或注册账号以保存您的数据</p>
+                <button class="close-modal" id="closeAuthModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">登录</div>
+                <div class="auth-tab" data-tab="register">注册</div>
+            </div>
+            
+            <div class="auth-form">
+                <div id="loginForm" class="auth-form-content">
+                    <div class="form-group">
+                        <label for="loginUsername">用户名</label>
+                        <input type="text" id="loginUsername" placeholder="请输入您的用户名">
+                        <div class="error-message" id="loginUsernameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">密码</label>
+                        <input type="password" id="loginPassword" placeholder="请输入您的密码">
+                        <div class="error-message" id="loginPasswordError"></div>
+                    </div>
+                    
+                    <button class="auth-btn" id="loginSubmitBtn">登录</button>
+                    
+                    <div class="auth-switch">
+                        还没有账号？<a id="switchToRegister">立即注册</a>
+                    </div>
+                </div>
+                
+                <div id="registerForm" class="auth-form-content" style="display: none;">
+                    <div class="form-group">
+                        <label for="registerUsername">用户名</label>
+                        <input type="text" id="registerUsername" placeholder="请设置您的用户名">
+                        <div class="error-message" id="registerUsernameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPassword">密码</label>
+                        <input type="password" id="registerPassword" placeholder="请设置您的密码（至少6位）">
+                        <div class="error-message" id="registerPasswordError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerConfirm">确认密码</label>
+                        <input type="password" id="registerConfirm" placeholder="请再次输入密码">
+                        <div class="error-message" id="registerConfirmError"></div>
+                    </div>
+                    
+                    <button class="auth-btn" id="registerSubmitBtn">注册账号</button>
+                    
+                    <div class="auth-switch">
+                        已有账号？<a id="switchToLogin">立即登录</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="auth-footer">
+                您的数据将安全存储在本设备中，请妥善保管您的账号信息
+            </div>
+        </div>
+    </div>
+    
+    <div class="copy-notification" id="copyNotification">
+        <span>✅</span> <span>排行榜已复制到剪贴板！</span>
+    </div>
+    
+    <div class="copy-notification" id="saveNotification" style="background: linear-gradient(135deg, var(--success), #219653);">
+        <span>✅</span> <span>数据保存成功！</span>
+    </div>
+
+    <script>
+        // 账号管理系统
+        const authSystem = {
+            // 存储用户账号信息
+            users: JSON.parse(localStorage.getItem('employee_system_users')) || {},
+            
+            // 当前登录用户
+            currentUser: localStorage.getItem('employee_system_currentUser') || null,
+            
+            // 初始化
+            init: function() {
+                this.bindEvents();
+                this.updateUI();
+            },
+            
+            // 绑定事件
+            bindEvents: function() {
+                // 登录/注册按钮
+                document.getElementById('loginBtn').addEventListener('click', () => {
+                    this.showAuthModal('login');
+                });
+                
+                // 退出登录按钮
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.logout();
+                });
+                
+                // 关闭模态框
+                document.getElementById('closeAuthModal').addEventListener('click', () => {
+                    this.hideAuthModal();
+                });
+                
+                // 标签切换
+                document.querySelectorAll('.auth-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabName = tab.getAttribute('data-tab');
+                        this.switchAuthTab(tabName);
+                    });
+                });
+                
+                // 登录/注册切换
+                document.getElementById('switchToRegister').addEventListener('click', () => {
+                    this.switchAuthTab('register');
+                });
+                
+                document.getElementById('switchToLogin').addEventListener('click', () => {
+                    this.switchAuthTab('login');
+                });
+                
+                // 登录提交
+                document.getElementById('loginSubmitBtn').addEventListener('click', () => {
+                    this.login();
+                });
+                
+                // 注册提交
+                document.getElementById('registerSubmitBtn').addEventListener('click', () => {
+                    this.register();
+                });
+                
+                // 按Enter键提交
+                document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.login();
+                });
+                
+                document.getElementById('registerConfirm').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.register();
+                });
+            },
+            
+            // 显示登录/注册模态框
+            showAuthModal: function(tab) {
+                document.getElementById('authModal').classList.add('active');
+                this.switchAuthTab(tab || 'login');
+            },
+            
+            // 隐藏登录/注册模态框
+            hideAuthModal: function() {
+                document.getElementById('authModal').classList.remove('active');
+                this.clearErrors();
+            },
+            
+            // 切换登录/注册标签
+            switchAuthTab: function(tab) {
+                // 更新标签
+                document.querySelectorAll('.auth-tab').forEach(t => {
+                    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+                });
+                
+                // 更新表单
+                document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+                document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+                
+                // 清除错误信息
+                this.clearErrors();
+            },
+            
+            // 清除错误信息
+            clearErrors: function() {
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.textContent = '';
+                });
+            },
+            
+            // 登录
+            login: function() {
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                
+                // 验证输入
+                if (!username) {
+                    document.getElementById('loginUsernameError').textContent = '请输入用户名';
+                    return;
+                }
+                
+                if (!password) {
+                    document.getElementById('loginPasswordError').textContent = '请输入密码';
+                    return;
+                }
+                
+                // 检查用户是否存在
+                if (!this.users[username]) {
+                    document.getElementById('loginUsernameError').textContent = '用户不存在';
+                    return;
+                }
+                
+                // 验证密码
+                if (this.users[username].password !== btoa(password)) {
+                    document.getElementById('loginPasswordError').textContent = '密码错误';
+                    return;
+                }
+                
+                // 登录成功
+                this.currentUser = username;
+                localStorage.setItem('employee_system_currentUser', username);
+                this.hideAuthModal();
+                this.updateUI();
+                
+                // 加载用户数据
+                loadSavedData();
+            },
+            
+            // 注册
+            register: function() {
+                const username = document.getElementById('registerUsername').value.trim();
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('registerConfirm').value;
+                
+                // 验证输入
+                if (!username) {
+                    document.getElementById('registerUsernameError').textContent = '请输入用户名';
+                    return;
+                }
+                
+                if (username.length < 3) {
+                    document.getElementById('registerUsernameError').textContent = '用户名至少3个字符';
+                    return;
+                }
+                
+                if (this.users[username]) {
+                    document.getElementById('registerUsernameError').textContent = '用户名已存在';
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    document.getElementById('registerPasswordError').textContent = '密码至少6位';
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    document.getElementById('registerConfirmError').textContent = '两次输入的密码不一致';
+                    return;
+                }
+                
+                // 创建用户
+                this.users[username] = {
+                    password: btoa(password), // 简单编码存储
+                    createdAt: new Date().toISOString()
+                };
+                
+                // 保存用户数据
+                localStorage.setItem('employee_system_users', JSON.stringify(this.users));
+                
+                // 自动登录
+                this.currentUser = username;
+                localStorage.setItem('employee_system_currentUser', username);
+                this.hideAuthModal();
+                this.updateUI();
+                
+                // 初始化用户数据
+                resetTable();
+                showSaveNotification('账号注册成功！');
+            },
+            
+            // 退出登录
+            logout: function() {
+                this.currentUser = null;
+                localStorage.removeItem('employee_system_currentUser');
+                this.updateUI();
+                
+                // 清空当前数据
+                resetTable();
+            },
+            
+            // 更新UI显示
+            updateUI: function() {
+                const userInfo = document.getElementById('userInfo');
+                const usernameDisplay = document.getElementById('usernameDisplay');
+                const loginBtn = document.getElementById('loginBtn');
+                const logoutBtn = document.getElementById('logoutBtn');
+                
+                if (this.currentUser) {
+                    userInfo.style.display = 'flex';
+                    usernameDisplay.textContent = this.currentUser;
+                    loginBtn.style.display = 'none';
+                    logoutBtn.style.display = 'block';
+                } else {
+                    userInfo.style.display = 'none';
+                    loginBtn.style.display = 'block';
+                    logoutBtn.style.display = 'none';
+                }
+            },
+            
+            // 获取当前用户数据键名
+            getUserStorageKey: function(key) {
+                return this.currentUser ? `${key}_${this.currentUser}` : key;
+            }
+        };
+        
+        // 创建一个对象来记录每个成员达到当前积分的时间
+        const participantRecords = {};
+        
+        // 初始化账号系统
+        authSystem.init();
+        
+        // 自动保存的键名
+        const getStorageKey = (key) => authSystem.getUserStorageKey(key);
+        const STORAGE_KEY = 'employee_invitation_score_data';
+        const RECORDS_STORAGE_KEY = 'employee_invitation_records_data';
+        
+        // 初始化表格
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedData();
+            if (document.querySelectorAll('#scoreTable tbody tr').length === 0) {
+                addParticipant();
+            }
+            
+            // 标签切换功能
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    
+                    // 移除所有活动状态
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前活动状态
+                    this.classList.add('active');
+                    document.getElementById(tab + '-content').classList.add('active');
+                });
+            });
+        });
+        
+        // 加载保存的数据
+        function loadSavedData() {
+            const savedData = localStorage.getItem(getStorageKey(STORAGE_KEY));
+            const savedRecords = localStorage.getItem(getStorageKey(RECORDS_STORAGE_KEY));
+            
+            // 加载时间记录数据
+            if (savedRecords) {
+                try {
+                    const records = JSON.parse(savedRecords);
+                    // 将字符串日期转换为Date对象
+                    for (const name in records) {
+                        if (records[name] && records[name].reachTime) {
+                            records[name].reachTime = new Date(records[name].reachTime);
+                        }
+                    }
+                    Object.assign(participantRecords, records);
+                } catch (e) {
+                    console.error('解析保存的记录失败:', e);
+                }
+            }
+            
+            // 加载表格数据
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    document.querySelector('#scoreTable tbody').innerHTML = '';
+                    
+                    data.forEach(rowData => {
+                        const row = addParticipant(false);
+                        row.querySelector('.name').value = rowData.name || "";
+                        row.querySelector('.m1').value = rowData.m1 || 0;
+                        row.querySelector('.m2').value = rowData.m2 || 0;
+                        row.querySelector('.m3').value = rowData.m3 || 0;
+                        row.querySelector('.m1to2').value = rowData.m1to2 || 0;
+                        row.querySelector('.m2to3').value = rowData.m2to3 || 0;
+                        row.querySelector('.daily').value = rowData.daily || 0;
+                        
+                        // 计算并更新行数据
+                        calculateRow(row.querySelector('.m1'));
+                        
+                        // 确保新添加的成员有时间记录
+                        const name = rowData.name || "未命名成员";
+                        if (!participantRecords[name]) {
+                            participantRecords[name] = {
+                                maxPoints: parseInt(row.querySelector('.member-points').textContent) || 0,
+                                reachTime: new Date()
+                            };
+                        }
+                    });
+                    
+                    updateCalculations();
+                    showSaveNotification('数据加载成功！');
+                } catch (e) {
+                    console.error('解析保存的数据失败:', e);
+                }
+            }
+        }
+        
+        // 保存数据到本地存储
+        function saveData() {
+            if (!authSystem.currentUser) {
+                showSaveNotification('请先登录以保存数据');
+                authSystem.showAuthModal();
+                return;
+            }
+            
+            const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
+            const dataToSave = rows.map(row => ({
+                name: row.querySelector('.name').value,
+                m1: row.querySelector('.m1').value,
+                m2: row.querySelector('.m2').value,
+                m3: row.querySelector('.m3').value,
+                m1to2: row.querySelector('.m1to2').value,
+                m2to3: row.querySelector('.m2to3').value,
+                daily: row.querySelector('.daily').value
+            }));
+            
+            // 准备时间记录数据，将Date对象转换为字符串
+            const recordsToSave = {};
+            for (const name in participantRecords) {
+                if (participantRecords[name]) {
+                    recordsToSave[name] = {
+                        maxPoints: participantRecords[name].maxPoints,
+                        reachTime: participantRecords[name].reachTime.toISOString() // 转换为ISO字符串
+                    };
+                }
+            }
+            
+            localStorage.setItem(getStorageKey(STORAGE_KEY), JSON.stringify(dataToSave));
+            localStorage.setItem(getStorageKey(RECORDS_STORAGE_KEY), JSON.stringify(recordsToSave));
+        }
+        
+        // 手动保存
+        function manualSave() {
+            saveData();
+            showSaveNotification('数据已手动保存！');
+        }
+        
+        // 自动保存（立即执行）
+        function autoSave() {
+            if (!authSystem.currentUser) return;
+            saveData();
+            console.log('数据自动保存');
+        }
+        
+        // 显示保存成功通知
+        function showSaveNotification(message) {
+            const notification = document.getElementById('saveNotification');
+            notification.querySelector('span:last-child').textContent = message;
+            notification.style.opacity = 0;
+            notification.style.display = 'flex';
+            
+            // 触发动画
+            setTimeout(() => {
+                notification.style.opacity = 1;
+                notification.style.transform = 'translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                notification.style.opacity = 0;
+                notification.style.transform = 'translateY(-20px)';
+            }, 3000);
+        }
+        
+        // 添加新参与者
+        function addParticipant(save = true) {
+            const tbody = document.querySelector('#scoreTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="rank"></td>
+                <td>
+                    <div class="member-info">
+                        <div class="member-name"><input type="text" class="name name-input" placeholder="会员账号"></div>
+                        <div class="member-points">0 Poin</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="number-controls">
+                        <button onclick="changeNumber(this, -1)">-</button>
+                        <input type="number" class="m1" min="0" value="0" oninput="calculateRow(this)">
+                        <button onclick="changeNumber(this, 1)">+</button>
+                    </div>
+                </td>
+                <td class="m1-points">0</td>
+                <td>
+                    <div class="number-controls">
+                        <button onclick="changeNumber(this, -1)">-</button>
+                        <input type="number" class="m2" min="0" value="0" oninput="calculateRow(this)">
+                        <button onclick="changeNumber(this, 1)">+</button>
+                    </div>
+                </td>
+                <td class="m2-points">0</td>
+                <td>
+                    <div class="number-controls">
+                        <button onclick="changeNumber(this, -1)">-</button>
+                        <input type="number" class="m3" min="0" value="0" oninput="calculateRow(this)">
+                        <button onclick="changeNumber(this, 1)">+</button>
+                    </div>
+                </td>
+                <td class="m3-points">0</td>
+                <td>
+                    <div class="number-controls">
+                        <button onclick="changeNumber(this, -1)">-</button>
+                        <input type="number" class="m1to2" min="0" value="0" oninput="calculateRow(this)">
+                        <button onclick="changeNumber(this, 1)">+</button>
+                    </div>
+                </td>
+                <td class="m1to2-points">0</td>
+                <td>
+                    <div class="number-controls">
+                        <button onclick="changeNumber(this, -1)">-</button>
+                        <input type="number" class="m2to3" min="0" value="0" oninput="calculateRow(this)">
+                        <button onclick="changeNumber(this, 1)">+</button>
+                    </div>
+                </td>
+                <td class="m2to3-points">0</td>
+                <td>
+                    <div class="number-controls">
+                        <button onclick="changeNumber(this, -1)">-</button>
+                        <input type="number" class="daily" min="0" value="0" oninput="calculateRow(this)">
+                        <button onclick="changeNumber(this, 1)">+</button>
+                    </div>
+                </td>
+                <td class="bonus-points">0</td>
+                <td><button class="delete-btn" onclick="deleteRow(this)"><i class="fas fa-trash-alt"></i></button></td>
+            `;
+            tbody.appendChild(row);
+            updateCalculations();
+            
+            // 立即自动保存
+            autoSave();
+            
+            return row;
+        }
+        
+        // 数字增减功能
+        function changeNumber(button, change) {
+            const controlsDiv = button.closest('.number-controls');
+            const input = controlsDiv.querySelector('input');
+            let value = parseInt(input.value) || 0;
+            value += change;
+            if (value < 0) value = 0;
+            input.value = value;
+            calculateRow(input);
+        }
+        
+        // 计算单行数据
+        function calculateRow(input) {
+            const row = input.closest('tr');
+            const nameInput = row.querySelector('.name');
+            const name = nameInput.value || "未命名成员";
+            
+            const m1 = parseInt(row.querySelector('.m1').value) || 0;
+            const m2 = parseInt(row.querySelector('.m2').value) || 0;
+            const m3 = parseInt(row.querySelector('.m3').value) || 0;
+            const m1to2 = parseInt(row.querySelector('.m1to2').value) || 0;
+            const m2to3 = parseInt(row.querySelector('.m2to3').value) || 0;
+            const daily = parseInt(row.querySelector('.daily').value) || 0;
+            
+            // 计算各项积分
+            const m1Points = m1 * 1;
+            const m2Points = m2 * 3;
+            const m3Points = m3 * 9;
+            const m1to2Points = m1to2 * 3; // 1升2获得3积分
+            const m2to3Points = m2to3 * 6; // 2升3获得6积分
+            const bonusPoints = daily * 5;
+            const totalPoints = m1Points + m2Points + m3Points + m1to2Points + m2to3Points + bonusPoints;
+            
+            // 更新显示
+            row.querySelector('.m1-points').textContent = m1Points;
+            row.querySelector('.m2-points').textContent = m2Points;
+            row.querySelector('.m3-points').textContent = m3Points;
+            row.querySelector('.m1to2-points').textContent = m1to2Points;
+            row.querySelector('.m2to3-points').textContent = m2to3Points;
+            row.querySelector('.bonus-points').textContent = bonusPoints;
+            row.querySelector('.member-points').textContent = `${totalPoints} Poin`;
+            
+            // 记录当前时间和积分
+            if (!participantRecords[name]) {
+                participantRecords[name] = {
+                    maxPoints: 0,
+                    reachTime: new Date()
+                };
+            }
+            
+            // 只有当积分增加时才更新时间
+            if (totalPoints > participantRecords[name].maxPoints) {
+                participantRecords[name] = {
+                    maxPoints: totalPoints,
+                    reachTime: new Date()
+                };
+            }
+            
+            updateCalculations();
+            // 立即自动保存
+            autoSave();
+        }
+        
+        // 更新所有计算和排名
+        function updateCalculations() {
+            const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
+            let totalM1 = 0, totalM2 = 0, totalM3 = 0, totalDaily = 0;
+            let totalM1Points = 0, totalM2Points = 0, totalM3Points = 0, totalBonus = 0;
+            let totalM1to2 = 0, totalM2to3 = 0;
+            let totalM1to2Points = 0, totalM2to3Points = 0;
+            
+            rows.forEach(row => {
+                totalM1 += parseInt(row.querySelector('.m1').value) || 0;
+                totalM2 += parseInt(row.querySelector('.m2').value) || 0;
+                totalM3 += parseInt(row.querySelector('.m3').value) || 0;
+                totalM1to2 += parseInt(row.querySelector('.m1to2').value) || 0;
+                totalM2to3 += parseInt(row.querySelector('.m2to3').value) || 0;
+                totalDaily += parseInt(row.querySelector('.daily').value) || 0;
+                
+                totalM1Points += parseInt(row.querySelector('.m1-points').textContent) || 0;
+                totalM2Points += parseInt(row.querySelector('.m2-points').textContent) || 0;
+                totalM3Points += parseInt(row.querySelector('.m3-points').textContent) || 0;
+                totalM1to2Points += parseInt(row.querySelector('.m1to2-points').textContent) || 0;
+                totalM2to3Points += parseInt(row.querySelector('.m2to3-points').textContent) || 0;
+                totalBonus += parseInt(row.querySelector('.bonus-points').textContent) || 0;
+            });
+            
+            document.getElementById('totalM1').textContent = totalM1;
+            document.getElementById('totalM1Points').textContent = totalM1Points;
+            document.getElementById('totalM2').textContent = totalM2;
+            document.getElementById('totalM2Points').textContent = totalM2Points;
+            document.getElementById('totalM3').textContent = totalM3;
+            document.getElementById('totalM3Points').textContent = totalM3Points;
+            document.getElementById('totalM1to2').textContent = totalM1to2;
+            document.getElementById('totalM1to2Points').textContent = totalM1to2Points;
+            document.getElementById('totalM2to3').textContent = totalM2to3;
+            document.getElementById('totalM2to3Points').textContent = totalM2to3Points;
+            document.getElementById('totalDaily').textContent = totalDaily;
+            document.getElementById('totalBonus').textContent = totalBonus;
+            
+            updateRanking();
+        }
+        
+        // 更新排名
+        function updateRanking() {
+            const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
+            
+            // 先按积分排序，积分相同的按达到时间排序
+            rows.sort((a, b) => {
+                const nameA = a.querySelector('.name').value || "未命名成员";
+                const nameB = b.querySelector('.name').value || "未命名成员";
+                const totalA = parseInt(a.querySelector('.member-points').textContent) || 0;
+                const totalB = parseInt(b.querySelector('.member-points').textContent) || 0;
+                
+                // 积分高的排在前面
+                if (totalA !== totalB) {
+                    return totalB - totalA;
+                }
+                
+                // 积分相同时，比较谁先达到这个积分
+                const timeA = participantRecords[nameA]?.reachTime || new Date();
+                const timeB = participantRecords[nameB]?.reachTime || new Date();
+                
+                // 时间早的排在前面
+                return timeA - timeB;
+            });
+            
+            // 更新排名显示
+            rows.forEach((row, index) => {
+                row.querySelector('.rank').textContent = index + 1;
+            });
+            
+            updateLeaderboard();
+        }
+        
+        // 更新排行榜显示
+        function updateLeaderboard() {
+            const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
+            const leaderboard = document.querySelector('.leaderboard ol');
+            
+            if (rows.length === 0) {
+                leaderboard.innerHTML = '<p>暂无数据，请添加成员并输入积分</p>';
+                return;
+            }
+            
+            // 使用与updateRanking相同的排序逻辑
+            rows.sort((a, b) => {
+                const nameA = a.querySelector('.name').value || "未命名成员";
+                const nameB = b.querySelector('.name').value || "未命名成员";
+                const totalA = parseInt(a.querySelector('.member-points').textContent) || 0;
+                const totalB = parseInt(b.querySelector('.member-points').textContent) || 0;
+                
+                if (totalA !== totalB) {
+                    return totalB - totalA;
+                }
+                
+                const timeA = participantRecords[nameA]?.reachTime || new Date();
+                const timeB = participantRecords[nameB]?.reachTime || new Date();
+                return timeA - timeB;
+            });
+            
+            leaderboard.innerHTML = '';
+            
+            // 显示所有成员
+            rows.forEach((row, index) => {
+                const name = row.querySelector('.name').value || "未命名成员";
+                const totalPoints = row.querySelector('.member-points').textContent;
+                
+                const li = document.createElement('li');
+                
+                li.innerHTML = `
+                    <div><strong>${index + 1}.</strong> ${name}</div>
+                    <div>${totalPoints}</div>
+                `;
+                leaderboard.appendChild(li);
+            });
+        }
+        
+        // 删除行
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            if (document.querySelectorAll('#scoreTable tbody tr').length > 1) {
+                if (confirm('确定要删除此行吗？')) {
+                    const name = row.querySelector('.name').value || "未命名成员";
+                    delete participantRecords[name];
+                    row.remove();
+                    updateCalculations();
+                    // 立即自动保存
+                    autoSave();
+                }
+            } else {
+                alert("至少需要保留一个成员");
+            }
+        }
+        
+        // 重置表格
+        function resetTable() {
+            if (confirm('确定要重置表格吗？所有数据将丢失。')) {
+                const tbody = document.querySelector('#scoreTable tbody');
+                tbody.innerHTML = '';
+                for (const key in participantRecords) {
+                    delete participantRecords[key];
+                }
+                addParticipant();
+                updateCalculations();
+            }
+        }
+        
+        // 复制排行榜到剪贴板
+        function copyLeaderboard() {
+            const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
+            
+            // 使用与updateRanking相同的排序逻辑
+            rows.sort((a, b) => {
+                const nameA = a.querySelector('.name').value || "未命名成员";
+                const nameB = b.querySelector('.name').value || "未命名成员";
+                const totalA = parseInt(a.querySelector('.member-points').textContent) || 0;
+                const totalB = parseInt(b.querySelector('.member-points').textContent) || 0;
+                
+                if (totalA !== totalB) {
+                    return totalB - totalA;
+                }
+                
+                const timeA = participantRecords[nameA]?.reachTime || new Date();
+                const timeB = participantRecords[nameB]?.reachTime || new Date();
+                return timeA - timeB;
+            });
+            
+            const top10 = rows.slice(0, 10);
+            
+            if (top10.length === 0) {
+                showCopyNotification("没有数据可复制");
+                return;
+            }
+            
+            let text = `🏆 Peringkat poin karyawan secara real-time 🏆\n\n`;
+            
+            top10.forEach((row, index) => {
+                let name = row.querySelector('.name').value || "未命名成员";
+                const totalPoints = row.querySelector('.member-points').textContent;
+                
+                // 处理账号显示格式：前面1位，后面5位，中间用*号代替
+                if (name.length > 6) {
+                    const firstChar = name.substring(0, 1);
+                    const lastPart = name.substring(name.length - 5);
+                    name = `${firstChar}***${lastPart}`;
+                }
+                
+                text += `${index + 1}. ${name}: ${totalPoints}\n`;
+            });
+            
+            // 在底部添加请求的短语
+            text += "\nKursi pertumbuhan selalu menjadi milik orang yang mengulurkan tangan lebih dulu！";
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyNotification("排行榜已复制到剪贴板！");
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            });
+        }
+        
+        // 显示复制成功通知
+        function showCopyNotification(message) {
+            const notification = document.getElementById('copyNotification');
+            notification.querySelector('span:last-child').textContent = message;
+            notification.style.opacity = 0;
+            notification.style.display = 'flex';
+            
+            // 触发动画
+            setTimeout(() => {
+                notification.style.opacity = 1;
+                notification.style.transform = 'translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                notification.style.opacity = 0;
+                notification.style.transform = 'translateY(-20px)';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
