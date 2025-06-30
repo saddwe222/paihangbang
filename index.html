@@ -1720,7 +1720,7 @@
                 return;
             }
             
-            let text = `🏆 Peringkat poin karyawan secara real-time (di bawah 60) 🏆\n\n`;
+            let text = `🏆 Peringkat poin karyawan secara real-time (Di bawah 60 poin) 🏆\n\n`;
             
             top10.forEach((member, index) => {
                 let name = member.name;
@@ -1735,7 +1735,7 @@
             });
             
             // 在底部添加请求的短语
-            text += "\nTahta pertumbuhan selalu menjadi milik mereka yang mengulurkan tangan lebih dulu! Daftar peringkat hanya menunjukkan 10 teratas";
+            text += "\nPerhatikan, daftar peringkat hanya akan menampilkan 10 besar. 🌟 Jika Anda belum masuk 10 besar, jangan putus asa, teruslah berusaha, masih ada kesempatan untuk mengejar! 💪 Setiap usaha layak diapresiasi, kami menantikan penampilan yang lebih hebat lagi! 🎯";
             
             navigator.clipboard.writeText(text).then(() => {
                 showCopyNotification("实时排行榜已复制到剪贴板！");
