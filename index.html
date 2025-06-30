@@ -26,6 +26,8 @@
             --border-radius: 10px;
             --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             --transition: all 0.3s ease;
+            --premium: #f39c12;
+            --premium-light: #f1c40f;
         }
         
         body {
@@ -152,7 +154,7 @@
             border: 1px solid var(--light-gray);
             display: flex;
             flex-direction: column;
-            max-height: calc(100vh - 200px);
+            /* 移除max-height限制 */
         }
         
         .panel::before {
@@ -347,13 +349,13 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: auto;
+            /* 移除overflow相关设置 */
         }
         
         .leaderboard {
             flex: 1;
-            overflow-y: auto;
             margin-top: 15px;
+            /* 移除overflow相关设置 */
         }
         
         .leaderboard ol {
@@ -552,6 +554,53 @@
             border-top: 1px solid var(--light-gray);
         }
         
+        /* 超级大奖排行榜样式 */
+        .premium-leaderboard {
+            margin-top: 30px;
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(241, 196, 15, 0.05));
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(243, 156, 18, 0.2);
+        }
+        
+        .premium-leaderboard .panel-header {
+            border-bottom: 2px solid rgba(243, 156, 18, 0.3);
+        }
+        
+        .premium-leaderboard .panel-title {
+            color: var(--premium);
+        }
+        
+        .premium-leaderboard .panel-title i {
+            color: var(--premium);
+            background: rgba(243, 156, 18, 0.1);
+        }
+        
+        .premium-leaderboard li {
+            border-left: 4px solid var(--premium);
+        }
+        
+        .premium-leaderboard li div:last-child {
+            background: linear-gradient(135deg, var(--premium), var(--premium-light));
+            box-shadow: 0 3px 8px rgba(243, 156, 18, 0.3);
+        }
+        
+        .premium-leaderboard li::before {
+            background: linear-gradient(to right, rgba(243, 156, 18, 0.05), transparent);
+        }
+        
+        .premium-badge {
+            background: linear-gradient(135deg, var(--premium), var(--premium-light));
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        
         /* 响应式调整 */
         @media (max-width: 1400px) {
             .dashboard {
@@ -561,7 +610,7 @@
             .leaderboard-panel {
                 width: 100%;
                 position: static;
-                max-height: none;
+                /* 移除max-height限制 */
             }
         }
         
@@ -1131,7 +1180,7 @@
             
             <div class="leaderboard-panel">
                 <div class="panel-header">
-                    <h2 class="panel-title"><i class="fas fa-trophy"></i> 实时排行榜</h2>
+                    <h2 class="panel-title"><i class="fas fa-trophy"></i> 实时排行榜 <span class="premium-badge">60分以下</span></h2>
                 </div>
                 
                 <button class="leaderboard-copy" onclick="copyLeaderboard()">
@@ -1140,40 +1189,24 @@
                 
                 <div class="leaderboard-container">
                     <div class="leaderboard">
-                        <ol>
-                            <li>
-                                <div><strong>1.</strong> 张三丰</div>
-                                <div>198 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>2.</strong> 李四</div>
-                                <div>156 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>3.</strong> 王五</div>
-                                <div>128 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>4.</strong> 赵六</div>
-                                <div>105 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>5.</strong> 钱七</div>
-                                <div>92 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>6.</strong> 孙八</div>
-                                <div>87 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>7.</strong> 周九</div>
-                                <div>76 Poin</div>
-                            </li>
-                            <li>
-                                <div><strong>8.</strong> 吴十</div>
-                                <div>68 Poin</div>
-                            </li>
+                        <ol id="regularLeaderboard">
+                            <!-- 这里将通过JavaScript动态填充 -->
                         </ol>
+                    </div>
+                    
+                    <!-- 超级大奖排行榜 -->
+                    <div class="premium-leaderboard">
+                        <div class="panel-header">
+                            <h2 class="panel-title"><i class="fas fa-crown"></i> 超级大奖排行榜 <span class="premium-badge">60分以上</span></h2>
+                        </div>
+                        <button class="leaderboard-copy" onclick="copyPremiumLeaderboard()" style="background: linear-gradient(135deg, var(--premium), var(--premium-light)); margin-bottom: 15px;">
+                            <i class="fas fa-copy"></i> 复制超级大奖榜
+                        </button>
+                        <div class="leaderboard">
+                            <ol id="premiumLeaderboard">
+                                <!-- 这里将通过JavaScript动态填充达到60分的成员 -->
+                            </ol>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1545,16 +1578,18 @@
                 row.querySelector('.rank').textContent = index + 1;
             });
             
-            updateLeaderboard();
+            updateLeaderboards();
         }
         
         // 更新排行榜显示
-        function updateLeaderboard() {
+        function updateLeaderboards() {
             const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
-            const leaderboard = document.querySelector('.leaderboard ol');
+            const regularLeaderboard = document.getElementById('regularLeaderboard');
+            const premiumLeaderboard = document.getElementById('premiumLeaderboard');
             
             if (rows.length === 0) {
-                leaderboard.innerHTML = '<p>暂无数据，请添加成员并输入积分</p>';
+                regularLeaderboard.innerHTML = '<li style="text-align: center; padding: 15px; color: var(--gray);">暂无数据，请添加成员并输入积分</li>';
+                premiumLeaderboard.innerHTML = '<li style="text-align: center; padding: 15px; color: var(--gray);">暂无达到60分的成员</li>';
                 return;
             }
             
@@ -1574,21 +1609,50 @@
                 return timeA - timeB;
             });
             
-            leaderboard.innerHTML = '';
+            // 分离成员：积分低于60分的显示在实时排行榜，60分及以上的显示在超级大奖排行榜
+            const regularMembers = [];
+            const premiumMembers = [];
             
-            // 显示所有成员
-            rows.forEach((row, index) => {
+            rows.forEach(row => {
                 const name = row.querySelector('.name').value || "未命名成员";
-                const totalPoints = row.querySelector('.member-points').textContent;
+                const totalPoints = parseInt(row.querySelector('.member-points').textContent) || 0;
                 
-                const li = document.createElement('li');
-                
-                li.innerHTML = `
-                    <div><strong>${index + 1}.</strong> ${name}</div>
-                    <div>${totalPoints}</div>
-                `;
-                leaderboard.appendChild(li);
+                if (totalPoints >= 60) {
+                    premiumMembers.push({ name, totalPoints });
+                } else {
+                    regularMembers.push({ name, totalPoints });
+                }
             });
+            
+            // 更新实时排行榜（60分以下）
+            regularLeaderboard.innerHTML = '';
+            if (regularMembers.length === 0) {
+                regularLeaderboard.innerHTML = '<li style="text-align: center; padding: 15px; color: var(--gray);">所有成员均达到60分以上</li>';
+            } else {
+                regularMembers.forEach((member, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div><strong>${index + 1}.</strong> ${member.name}</div>
+                        <div>${member.totalPoints} Poin</div>
+                    `;
+                    regularLeaderboard.appendChild(li);
+                });
+            }
+            
+            // 更新超级大奖排行榜（60分及以上）
+            premiumLeaderboard.innerHTML = '';
+            if (premiumMembers.length === 0) {
+                premiumLeaderboard.innerHTML = '<li style="text-align: center; padding: 15px; color: var(--gray);">暂无达到60分的成员</li>';
+            } else {
+                premiumMembers.forEach((member, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div><strong>${index + 1}.</strong> ${member.name}</div>
+                        <div>${member.totalPoints} Poin</div>
+                    `;
+                    premiumLeaderboard.appendChild(li);
+                });
+            }
         }
         
         // 删除行
@@ -1623,39 +1687,43 @@
             }
         }
         
-        // 复制排行榜到剪贴板
+        // 复制排行榜到剪贴板（实时排行榜）
         function copyLeaderboard() {
             const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
             
-            // 使用与updateRanking相同的排序逻辑
-            rows.sort((a, b) => {
-                const nameA = a.querySelector('.name').value || "未命名成员";
-                const nameB = b.querySelector('.name').value || "未命名成员";
-                const totalA = parseInt(a.querySelector('.member-points').textContent) || 0;
-                const totalB = parseInt(b.querySelector('.member-points').textContent) || 0;
+            // 筛选出积分低于60的成员
+            const regularMembers = [];
+            rows.forEach(row => {
+                const name = row.querySelector('.name').value || "未命名成员";
+                const totalPoints = parseInt(row.querySelector('.member-points').textContent) || 0;
                 
-                if (totalA !== totalB) {
-                    return totalB - totalA;
+                if (totalPoints < 60) {
+                    regularMembers.push({ name, totalPoints });
+                }
+            });
+            
+            // 排序：按积分降序，积分相同按时间升序
+            regularMembers.sort((a, b) => {
+                if (b.totalPoints !== a.totalPoints) {
+                    return b.totalPoints - a.totalPoints;
                 }
                 
-                const timeA = participantRecords[nameA]?.reachTime || new Date();
-                const timeB = participantRecords[nameB]?.reachTime || new Date();
+                const timeA = participantRecords[a.name]?.reachTime || new Date();
+                const timeB = participantRecords[b.name]?.reachTime || new Date();
                 return timeA - timeB;
             });
             
-            const top10 = rows.slice(0, 10);
+            const top10 = regularMembers.slice(0, 10);
             
             if (top10.length === 0) {
                 showCopyNotification("没有数据可复制");
                 return;
             }
             
-            let text = `🏆 Peringkat poin karyawan secara real-time 🏆\n\n`;
+            let text = `🏆 Peringkat poin karyawan secara real-time (di bawah 60) 🏆\n\n`;
             
-            top10.forEach((row, index) => {
-                let name = row.querySelector('.name').value || "未命名成员";
-                const totalPoints = row.querySelector('.member-points').textContent;
-                
+            top10.forEach((member, index) => {
+                let name = member.name;
                 // 处理账号显示格式：前面1位，后面5位，中间用*号代替
                 if (name.length > 6) {
                     const firstChar = name.substring(0, 1);
@@ -1663,14 +1731,70 @@
                     name = `${firstChar}***${lastPart}`;
                 }
                 
-                text += `${index + 1}. ${name}: ${totalPoints}\n`;
+                text += `${index + 1}. ${name}: ${member.totalPoints} Poin\n`;
             });
             
             // 在底部添加请求的短语
-            text += "\nKursi pertumbuhan selalu menjadi milik orang yang mengulurkan tangan lebih dulu！";
+            text += "\nTahta pertumbuhan selalu menjadi milik mereka yang mengulurkan tangan lebih dulu! Daftar peringkat hanya menunjukkan 10 teratas";
             
             navigator.clipboard.writeText(text).then(() => {
-                showCopyNotification("排行榜已复制到剪贴板！");
+                showCopyNotification("实时排行榜已复制到剪贴板！");
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            });
+        }
+        
+        // 复制超级大奖排行榜
+        function copyPremiumLeaderboard() {
+            const rows = Array.from(document.querySelectorAll('#scoreTable tbody tr'));
+            
+            // 筛选出积分达到60分以上的成员
+            const premiumMembers = [];
+            rows.forEach(row => {
+                const name = row.querySelector('.name').value || "未命名成员";
+                const totalPoints = parseInt(row.querySelector('.member-points').textContent) || 0;
+                
+                if (totalPoints >= 60) {
+                    premiumMembers.push({ name, totalPoints });
+                }
+            });
+            
+            if (premiumMembers.length === 0) {
+                showCopyNotification("没有达到60分的成员可复制");
+                return;
+            }
+            
+            // 按积分降序排序，积分相同按时间升序
+            premiumMembers.sort((a, b) => {
+                if (b.totalPoints !== a.totalPoints) {
+                    return b.totalPoints - a.totalPoints;
+                }
+                
+                const timeA = participantRecords[a.name]?.reachTime || new Date();
+                const timeB = participantRecords[b.name]?.reachTime || new Date();
+                return timeA - timeB;
+            });
+            
+            let text = `🏆 Peringkat Hadiah Super (60 poin ke atas) 🏆\n\n`;
+            
+            premiumMembers.forEach((member, index) => {
+                let name = member.name;
+                // 处理账号显示格式：前面1位，后面5位，中间用*号代替
+                if (name.length > 6) {
+                    const firstChar = name.substring(0, 1);
+                    const lastPart = name.substring(name.length - 5);
+                    name = `${firstChar}***${lastPart}`;
+                }
+                
+                text += `${index + 1}. ${name}: ${member.totalPoints} Poin\n`;
+            });
+            
+            // 在底部添加请求的短语
+            text += "\n🎉 Usaha dan kegigihanmu pantas mendapatkan pujian👏";
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyNotification("超级大奖排行榜已复制到剪贴板！");
             }).catch(err => {
                 console.error('复制失败:', err);
                 alert('复制失败，请手动复制');
